@@ -132,15 +132,26 @@ languages/registry.py <- pure data (Unicode ranges)
 
 ## Performance
 
-- **Latency overhead: 0%** — no CPU-to-GPU transfers in `apply()`, GPU-only ops
-- **Init**: vocabulary scan ~12s for 262K vocab (one-time at startup)
-- **Per-step**: single vector addition using pre-allocated GPU tensors — negligible
-- **Memory**: one bool tensor per language + cached float masks for used combos
-- **Mixed batch**: unfiltered requests return immediately from `apply()` — zero impact
+Tested on RunPod L40S (46GB), vLLM 0.28.0,
+Gemma4 26B-A4B FP8 (262K vocab), max_num_seqs=32.
+
+| Metric | Result |
+|--------|--------|
+| Latency overhead | 0% (baseline 111.6 tok/s vs filtered 111.3 tok/s) |
+| Throughput at 32 concurrent | 12.7 rps (filter off) vs 11.7 rps (filter on) |
+| Sustained high-RPS (3 min) | 11.3 rps, 2,039 requests, 0 violations |
+| Long generation (16K tokens) | 0 violations across 51 requests |
+| Mixed batch | unfiltered requests unaffected — immediate return from `apply()` |
+| Init | vocabulary scan ~12s for 262K vocab (one-time at startup) |
+
+6,176 total requests across all test configurations, **0 violations, 0 errors**.
+
+No CPU-to-GPU transfers in `apply()` — all tensors pre-allocated on GPU
+in `update_state()`.
 
 ## Requirements
 
-- vLLM >= 0.26.0 (V1 LogitsProcessor interface)
+- vLLM (V1 LogitsProcessor interface, tested on 0.26 and 0.28)
 - Python >= 3.10
 - torch, transformers
 
