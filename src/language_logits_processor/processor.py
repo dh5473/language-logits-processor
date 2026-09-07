@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 vLLM V1 batch-level LogitsProcessor.
 
@@ -14,8 +15,6 @@ Performance note:
     (rare in normal text).
 """
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass, field
 from typing import Any
@@ -24,7 +23,11 @@ import torch
 from vllm.config import VllmConfig
 from vllm.sampling_params import SamplingParams
 from vllm.tokenizers import cached_tokenizer_from_config
-from vllm.v1.sample.logits_processor import BatchUpdate, LogitsProcessor
+from vllm.v1.sample.logits_processor import (
+    BatchUpdate,
+    LogitsProcessor,
+    MoveDirectionality,
+)
 
 from language_logits_processor.languages import LANGUAGES
 from language_logits_processor.masking import ComboMask, MaskCache
@@ -126,14 +129,16 @@ class LanguageLogitsProcessor(LogitsProcessor):
             )
             changed = True
 
-        if batch_update.moved:
-            moved_states: dict[int, _RequestState] = {}
-            for from_idx, to_idx, _direction in batch_update.moved:
-                state = self._requests.pop(from_idx, None)
-                if state is not None:
-                    moved_states[to_idx] = state
-                    changed = True
-            self._requests.update(moved_states)
+        for a_idx, b_idx, direction in batch_update.moved:
+            a_state = self._requests.pop(a_idx, None)
+            b_state = self._requests.pop(b_idx, None)
+            if a_state is not None:
+                self._requests[b_idx] = a_state
+                changed = True
+            if b_state is not None:
+                changed = True
+                if direction == MoveDirectionality.SWAP:
+                    self._requests[a_idx] = b_state
 
         if changed:
             self._rebuild_gpu_state()
