@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 def __getattr__(name: str):
     if name == "LanguageLogitsProcessor":
         from language_logits_processor.processor import LanguageLogitsProcessor

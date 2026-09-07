@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Mask cache, byte-fallback guard, and combo mask.
 
@@ -10,8 +11,6 @@ Two layers of filtering:
      characters one byte at a time via byte-fallback tokens (<0x00>..<0xFF>).
      Derived automatically from the allowed Unicode ranges.
 """
-
-from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
@@ -26,13 +25,13 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-NEG_INF = float("-inf")
+NEG_INF = -float("inf")
 
 
 # ── UTF-8 codepoint range helpers ──────────────────────────────────────
 
 
-def _cp_range_for_lead(lead: int) -> tuple[int, int] | None:
+def _cp_range_for_lead(lead: int) -> "tuple[int, int] | None":
     """Codepoint range reachable from a UTF-8 lead byte."""
     if 0xC2 <= lead <= 0xDF:
         lo = (lead & 0x1F) << 6
@@ -54,7 +53,7 @@ def _cp_range_for_lead(lead: int) -> tuple[int, int] | None:
     return None
 
 
-def _cp_range_for_lead_second(lead: int, second: int) -> tuple[int, int] | None:
+def _cp_range_for_lead_second(lead: int, second: int) -> "tuple[int, int] | None":
     """Codepoint range reachable from a UTF-8 lead + second byte pair."""
     if not (0x80 <= second <= 0xBF):
         return None
@@ -202,7 +201,7 @@ class MaskCache:
 
     def __init__(
         self,
-        tokenizer: PreTrainedTokenizerBase,
+        tokenizer: "PreTrainedTokenizerBase",
         vocab_size: int,
         device: torch.device,
     ) -> None:

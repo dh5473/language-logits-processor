@@ -1,11 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Token classifier — maps each token in a vocabulary to the set of languages
 whose Unicode ranges it touches.
 
 No vLLM dependency. Requires only torch and a HuggingFace tokenizer.
 """
-
-from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def detect_byte_tokens(tokenizer: PreTrainedTokenizerBase) -> list[int] | None:
+def detect_byte_tokens(tokenizer: "PreTrainedTokenizerBase") -> list[int] | None:
     """
     Detect byte-fallback tokens (<0x00> through <0xFF>).
     Returns list of 256 token IDs where index = byte value, or None
@@ -76,7 +75,7 @@ def _token_languages(text: str) -> set[str]:
 
 
 def classify_vocabulary(
-    tokenizer: PreTrainedTokenizerBase,
+    tokenizer: "PreTrainedTokenizerBase",
     vocab_size: int,
     device: torch.device,
 ) -> tuple[dict[str, torch.Tensor], torch.Tensor, torch.Tensor]:
